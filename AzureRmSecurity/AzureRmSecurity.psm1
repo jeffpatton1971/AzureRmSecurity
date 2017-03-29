@@ -180,3 +180,67 @@ function Get-AzureRmSecurityTask
 	{
 	}
 }
+
+function Get-AzureRmSecurityPolicy
+{
+	<#
+	https://msdn.microsoft.com/en-us/library/mt704061.aspx
+	#>
+	[CmdletBinding()]
+	param
+	(
+	)
+
+	DynamicParam
+	{
+		$DynamicParameters = @(
+			@{
+				Name = 'Subscription'
+				Type = [object]
+				Position = 0
+				Mandatory = $true
+			},
+			@{
+				Name = 'Name'
+				Type = [string]
+				Position = 1
+				Mandatory = $false
+			}
+		)
+		$DynamicParameters |ForEach-Object {New-Object -TypeName psobject -Property $_} |New-DynamicParameter;
+	}
+
+	begin
+	{
+		$Subscription = $PSBoundParameters['Subscription'];
+		$PolicyName = $PSBoundParameters['Name'];
+	}
+
+	process
+	{
+		try
+		{
+			$ErrorActionPreference = 'Stop';
+			$Error.Clear();
+
+			$ResourceId = "/subscriptions/$($Subscription.SubscriptionId)/providers/microsoft.Security/policies";
+			$ApiVersion = '2015-06-01-preview';
+
+			if ($PolicyName)
+			{
+				$ResourceId = "$($ResourceId)/$($PolicyName)";
+			}
+			
+			Get-AzureRmResource -ResourceId $ResourceId -ApiVersion $ApiVersion;
+		}
+		catch
+		{
+			throw $_;
+		}
+	}
+
+	end
+	{
+	}
+}
+
