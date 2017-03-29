@@ -244,3 +244,84 @@ function Get-AzureRmSecurityPolicy
 	}
 }
 
+function Get-AzureRmSecurityDataCollection
+{
+	<#
+	https://msdn.microsoft.com/en-us/library/mt704044.aspx
+	#>
+	[CmdletBinding()]
+	param
+	(
+	)
+
+	DynamicParam
+	{
+		$DynamicParameters = @(
+			@{
+				Name = 'Subscription'
+				Type = [object]
+				Position = 0
+				Mandatory = $true
+			},
+			@{
+				Name = 'ResourceGroupName'
+				Type = [string]
+				Position = 1
+				Mandatory = $true
+			},
+			@{
+				Name = 'VMName'
+				Type = [string]
+				Position = 2
+				Mandatory = $true
+			},
+			@{
+				Name = 'Type'
+				Type = [string]
+				Position = 3
+				Mandatory = $true
+				ValidateSet = 'Microsoft.Compute','Microsoft.ClassicCompute'
+			},
+			@{
+				Name = 'ResultType'
+				Type = [string]
+				Position = 3
+				Mandatory = $true
+				ValidateSet = 'patch','baseline','antimalware'
+			}
+		)
+		$DynamicParameters |ForEach-Object {New-Object -TypeName psobject -Property $_} |New-DynamicParameter;
+	}
+
+	begin
+	{
+		$Subscription = $PSBoundParameters['Subscription'];
+		$ResourceGroupName = $PSBoundParameters['ResourceGroupName']
+		$VMName = $PSBoundParameters['VMName'];
+		$ResourceType = $PSBoundParameters['Type'];
+		$ResultType = $PSBoundParameters['ResultType'];
+	}
+
+	process
+	{
+		try
+		{
+			$ErrorActionPreference = 'Stop';
+			$Error.Clear();
+
+			$ResourceId = "/subscriptions/$($Subscription.SubscriptionId)/resourceGroups/$($ResourceGroupName)/providers/$($ResourceType)/virtualMachines/$($VMName)/providers/Microsoft.Security/dataCollectionResults/$($ResultType)";
+			$ApiVersion = '2015-06-01-preview';
+
+			Get-AzureRmResource -ResourceId $ResourceId -ApiVersion $ApiVersion;
+		}
+		catch
+		{
+			throw $_;
+		}
+	}
+
+	end
+	{
+	}
+}
+
